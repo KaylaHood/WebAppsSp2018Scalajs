@@ -1,0 +1,11 @@
+@* ajaxTest Template File *@
+@()(implicit request: RequestHeader)
+
+@main("Ajax") {
+	<h2>Do stuff with Ajax</h2>
+	<div id="ajax"></div>
+}
+
+@*  This uses the non-jQuery approach.
+<script type="text/javascript" src="@routes.Assets.versioned("javascripts/ajax.js")"></script>
+*@

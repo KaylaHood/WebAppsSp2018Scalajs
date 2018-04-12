@@ -1,0 +1,10 @@
+@* wsChat Template File *@
+@()(implicit request: RequestHeader)
+
+@main("WebSocket Chatting!") {
+  <h2>Chat via WebSockets</h2>
+  <input type="text" id="input"></input>
+  <div id="messages"></div>
+}
+
+<script src="@routes.Assets.versioned("javascripts/wschat.js")" type="text/javascript"></script>

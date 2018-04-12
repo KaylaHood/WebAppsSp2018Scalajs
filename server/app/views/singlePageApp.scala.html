@@ -1,0 +1,28 @@
+@* singlePageApp Template File *@
+@()(implicit request: RequestHeader)
+
+@main("Single Page Application") {
+	<h1 id="header">First Page</h1>
+	<p id="scalajsShoutOut"></p>
+	<div id="mainContent">
+	<p>
+		This is intended to demonstrate a single page application. In this type of application, there is
+		generally only one view. Additional contents are brought into the view by JavaScript code that
+		makes requests for data and alters the DOM accordingly.
+	</p>
+	</div>
+	<div id="controls">
+		<input type="button" id="button0" value="Restore">
+		<input type="button" id="button1" value="Button 1">
+		<input type="button" id="button2" value="Button 2">
+		<br>
+		x = <input type="text" id="xValue" value="3">&nbsp;&nbsp;
+		y = <input type="text" id="yValue" value="8">&nbsp;&nbsp;
+		radius = <input type="text" id="radValue" value="5">&nbsp;&nbsp;
+		<input type="button" id="sendCircle" value="Send">
+	</div>
+	<input type="hidden" id="route1" value="@routes.SinglePageApp.button1Call">
+	<input type="hidden" id="route2" value="@routes.SinglePageApp.button2Call">
+	<input type="hidden" id="setCircleRoute" value="@routes.SinglePageApp.setCircle">
+	@scalajs.html.scripts("CSCI3345-S18-client", routes.Assets.versioned(_).toString, name => getClass.getResource(s"/public/$name") != null)
+}

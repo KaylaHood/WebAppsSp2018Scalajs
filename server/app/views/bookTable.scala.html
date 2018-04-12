@@ -1,0 +1,21 @@
+@* bookTable Template File *@
+@(books: Seq[Book], bookFrom: Form[NewBook])(implicit request: MessagesRequestHeader, flash: Flash)
+
+@main("Book List") {
+	<h2>Book List</h2>
+	<p>This page shows a table of books that is populated using Slick to populate a database.</p>
+	<table border="1">
+		<tr><th>Title</th><th>ISBN</th><th>Price</th></tr>
+		@for(b <- books) {
+			<tr><td>@b.title</td><td>@b.isbn</td><td>@b.price</td></tr>
+		}
+	</table>
+	
+	@helper.form(action = helper.CSRF(routes.BookController.addBook)) {
+	  @helper.inputText(bookFrom("title"))
+	  @helper.inputText(bookFrom("isbn"))
+	  @helper.inputText(bookFrom("price"))
+	  <input type="submit" value="Submit">
+	}
+	
+}
