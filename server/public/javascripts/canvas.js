@@ -1,0 +1,1 @@
+CanvasMain(document.getElementById('interactiveCanvas'));

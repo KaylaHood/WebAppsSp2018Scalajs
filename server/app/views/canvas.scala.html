@@ -1,0 +1,10 @@
+@* canvas Template File *@
+@()(implicit request: RequestHeader)
+
+@main("Interactive Canvas") {
+	<h1 id="header">Click anywhere to make ripples!</h1>
+	<canvas id="interactiveCanvas"></canvas>
+	@scalajs.html.scripts("CSCI3345-S18-client", routes.Assets.versioned(_).toString, name => getClass.getResource(s"/public/$name") != null)
+}
+
+<script src="@routes.Assets.versioned("javascripts/canvas.js")" type="text/javascript"></script>
