@@ -16,8 +16,8 @@ import scala.util.control.Breaks._
 class Ripple(
     var xPos: Double,
     var yPos: Double,
-    var radius: Int,
-    var lineWidth: Int,
+    var radius: Double,
+    var lineWidth: Double,
     var gradient: org.scalajs.dom.raw.CanvasGradient
   ) extends js.Object
   
@@ -34,8 +34,8 @@ object CanvasMain {
       ctx.strokeStyle = ripple.gradient
       ctx.lineWidth = ripple.lineWidth
       ctx.stroke()
-      ripple.radius = ripple.radius + 1
-      ripple.lineWidth = ripple.lineWidth + 1
+      ripple.radius = ripple.radius + 1.5
+      ripple.lineWidth = ripple.lineWidth + 0.05
     }
     
     def drawEmpty(): Unit = {
@@ -64,8 +64,9 @@ object CanvasMain {
     }
     
     def resizeCanvas(): Unit = {
-      canvas.width = canvas.parentElement.clientWidth
-      canvas.height = canvas.parentElement.clientHeight
+      var canvasHolderBounds = dom.window.document.getElementById("canvasHolder").getBoundingClientRect()
+      canvas.width = canvasHolderBounds.width.toInt
+      canvas.height = canvasHolderBounds.height.toInt
       drawCanvas()
     }
     
@@ -94,6 +95,7 @@ object CanvasMain {
       addRipple(x,y,true)
     }
     dom.window.setInterval(() => drawCanvas(), 80)
+    resizeCanvas()
   }
 
 }

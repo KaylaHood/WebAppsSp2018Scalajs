@@ -1,0 +1,17 @@
+#canvasDiv {
+	border-width: 0.3rem;
+	border-color: black;
+	border-style: solid;
+	margin: 0.5rem;
+	padding: 0.5rem;
+	min-height: 40rem;
+	max-height: 80rem;
+	display: flex;
+}
+
+#canvasHolder {
+	display: inline-block;
+	vertical-align: top;
+	align-items: stretch;
+	width: 100%;
+}
