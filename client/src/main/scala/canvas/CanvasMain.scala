@@ -13,29 +13,45 @@ import scala.util.control.Breaks._
 
 @JSGlobal
 @js.native
-class Ripple(
-    var xPos: Double,
-    var yPos: Double,
-    var radius: Double,
-    var lineWidth: Double,
-    var gradient: org.scalajs.dom.raw.CanvasGradient
+class Rectangle (
+    var x: Double,
+    var y: Double,
+    var halfWidth: Double,
+    var halfHeight: Double
+  ) extends js.Object
+  
+@JSGlobal
+@js.native
+class Circle (
+    var x: Double,
+    var y: Double,
+    var radius: Double
+  ) extends js.Object
+  
+@JSGlobal
+@js.native
+class Line (
+    var x: Double,
+    var y: Double,
+    var endX: Double,
+    var endY: Double
   ) extends js.Object
   
 @JSExportTopLevel("CanvasObject")
 object CanvasMain {
   @JSExportTopLevel("CanvasMain")
   def main(canvas: html.Canvas): Unit = {
+    var socket = null
+    var socketIsInitialized = false
+    var socketTimer = null
     var ctx: dom.CanvasRenderingContext2D = canvas.getContext("2d").asInstanceOf[dom.CanvasRenderingContext2D]
-    var ripples: ArrayBuffer[Ripple] = ArrayBuffer()
+    var rects: ArrayBuffer[Rectangle] = ArrayBuffer()
+    var circles: ArrayBuffer[Circle] = ArrayBuffer()
+    var lines: ArrayBuffer[Line] = ArrayBuffer()
     
-    def drawRipple(ripple: Ripple): Unit = {
+    def drawRect(rect: Rectangle): Unit = {
       ctx.beginPath()
-      ctx.arc(ripple.xPos,ripple.yPos,ripple.radius,0,2*Math.PI)
-      ctx.strokeStyle = ripple.gradient
-      ctx.lineWidth = ripple.lineWidth
-      ctx.stroke()
-      ripple.radius = ripple.radius + 1.5
-      ripple.lineWidth = ripple.lineWidth + 0.05
+      ctx.fillRect(rect.x,rect.y,rect.halfWidth * 2.0,rect.halfHeight * 2.0)
     }
     
     def drawEmpty(): Unit = {
@@ -47,17 +63,14 @@ object CanvasMain {
     def drawCanvas(): Unit = {
       ctx.fillStyle = "white"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
-      if(ripples.length == 0) {
+      if(rects.length == 0 && circles.length == 0 && lines.length == 0) {
         drawEmpty()
       }
-      else {
-        for (i <- 0 until ripples.length) {
-          var r = ripples.lift(i)
+      else if (rects.length != 0) {
+        for (i <- 0 until rects.length) {
+          var r = rects.lift(i)
           if(r.isDefined) {
-            drawRipple(r.get)
-            if(r.get.radius > 150) {
-              ripples.patch(i,Nil,1)
-            }
+            drawRect(r.get)
           }
         }
       }
@@ -70,21 +83,13 @@ object CanvasMain {
       drawCanvas()
     }
     
-    def addRipple(x: Double, y: Double, recur: Boolean): Unit = {
-      var ripple = js.Dynamic.literal().asInstanceOf[Ripple]
-      ripple.xPos = x
-      ripple.yPos = y
-      ripple.radius = 0
-      ripple.lineWidth = 2
-      ripple.gradient = ctx.createRadialGradient(x, y, 5, x, y, 100)
-      ripple.gradient.addColorStop(0, "#0000FF")
-      ripple.gradient.addColorStop(0.5, "#0001C0")
-      ripple.gradient.addColorStop(1, "#FFFFFF")
-      ripples.append(ripple)
-      if(recur) {
-        dom.window.setTimeout((() => addRipple(x,y,false)),500)
-        dom.window.setTimeout((() => addRipple(x,y,false)),1000)
-      }
+    def addRect(_x: Double, _y: Double, _halfWidth: Double, _halfHeight: Double): Unit = {
+      var rect = js.Dynamic.literal().asInstanceOf[Rectangle]
+      rect.x = _x
+      rect.y = _y
+      rect.halfWidth = _halfWidth
+      rect.halfHeight = _halfHeight
+      rects.append(rect)
     }
     
     dom.window.onresize = (e : dom.Event) => { resizeCanvas() }
@@ -92,7 +97,7 @@ object CanvasMain {
       var vpOffset = canvas.getBoundingClientRect()
       var x: Double = (e.pageX - (vpOffset.left + dom.window.pageXOffset))
       var y: Double = (e.pageY - (vpOffset.top + dom.window.pageYOffset))
-      addRipple(x,y,true)
+      //addRipple(x,y,true)
     }
     dom.window.setInterval(() => drawCanvas(), 80)
     resizeCanvas()

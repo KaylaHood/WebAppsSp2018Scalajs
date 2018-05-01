@@ -12,10 +12,7 @@ lazy val server = (project in file("server")).settings(commonSettings).settings(
     "com.vmunier" %% "scalajs-scripts" % "1.1.2",
     guice,
     "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
-//    "edu.trinity" %% "swiftvis2" % "0.1.0-SNAPSHOT",
-
     "com.typesafe.play" %% "play-json" % "2.6.9",
-
     "com.typesafe.play" %% "play-slick" % "3.0.3",
     "mysql" % "mysql-connector-java" % "6.0.6",
     "com.typesafe.slick" %% "slick-codegen" % "3.2.3"
@@ -37,7 +34,16 @@ lazy val client = (project in file("client")).settings(commonSettings).settings(
 
 // Shared subproject - this is where you put anything for both server and client
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).settings(commonSettings,
-  name := "CSCI3345-S18-shared")
+  name := "CSCI3345-S18-shared",
+  libraryDependencies ++= Seq(
+    "com.vmunier" %% "scalajs-scripts" % "1.1.2",
+    guice,
+    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test,
+    "com.typesafe.play" %% "play-json" % "2.6.9",
+    "com.typesafe.play" %% "play-slick" % "3.0.3",
+    "mysql" % "mysql-connector-java" % "6.0.6",
+    "com.typesafe.slick" %% "slick-codegen" % "3.2.3"
+  ))
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
