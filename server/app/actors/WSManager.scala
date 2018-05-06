@@ -5,7 +5,7 @@ import akka.actor.Actor
 import akka.actor.Props
 import akka.actor.ActorRef
 import WSActor._
-import models._
+import sharedModels._
 
 /**
  * "WSManager" = "Web Socket Manager"
@@ -24,26 +24,26 @@ class WSManager extends Actor {
     case AddShape(shapeMsg) =>
       addShape(shapeMsg)
     case BroadcastMessage(msg) =>
-      println("Broadcasting message \"" + msg + "\" to all clients...")
+      //println("Broadcasting message \"" + msg + "\" to all clients...")
       // TODO: add particles to canvas, etc
       clients.foreach(c => c.tell(WSActor.MessageOut(msg), self))
   }
   
   def addShape(shapeMsg: AddShapeMessage) = {
-    println("WSManager is adding the shape with class " + shapeMsg.shape.getClass)
+    //println("WSManager is adding the shape with class " + shapeMsg.shape.getClass)
     canvas.addShape(shapeMsg.shape)
-    clients.foreach(c => c.tell(shapeMsg, self))
+    clients.foreach(c => c.tell(WSActor.MessageOut(shapeMsg), self))
   }
   
   def addClient(clientRef: WSActorRef) = {
-    println("WSManager is adding the WSActor with id: " + clientRef.id)
+    //println("WSManager is adding the WSActor with id: " + clientRef.id)
     clients ::= clientRef
     val msgSyncCanvas = new SyncCanvasMessage(this.canvas)
-    clientRef.tell(msgSyncCanvas, self)
+    clientRef.tell(WSActor.MessageOut(msgSyncCanvas), self)
   }
   
   def removeClient(clientRef: WSActorRef) = {
-    println("WSManager is removing the WSActor with id: " + clientRef.id)
+    //println("WSManager is removing the WSActor with id: " + clientRef.id)
     clients = clients.filterNot(x => x.ref == clientRef.ref)
   }
 

@@ -10,7 +10,7 @@ import play.api.mvc.WebSocket.MessageFlowTransformer
 import akka.actor._
 import actors.WSActor
 import actors.WSManager
-import models._
+import sharedModels._
 
 /**
  * "WSController" = "Web Socket Controller"
