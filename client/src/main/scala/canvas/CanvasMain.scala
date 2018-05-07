@@ -12,32 +12,6 @@ import scala.scalajs.js.annotation.JSGlobal
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
 import sharedModels._
-
-@JSGlobal
-@js.native
-class JsRectangle (
-    var x: Double,
-    var y: Double,
-    var halfWidth: Double,
-    var halfHeight: Double
-  ) extends js.Object
-  
-@JSGlobal
-@js.native
-class JsCircle (
-    var x: Double,
-    var y: Double,
-    var radius: Double
-  ) extends js.Object
-  
-@JSGlobal
-@js.native
-class JsLine (
-    var x: Double,
-    var y: Double,
-    var endX: Double,
-    var endY: Double
-  ) extends js.Object
   
 object CanvasMain {
   var socket: org.scalajs.dom.raw.WebSocket = null
@@ -47,11 +21,14 @@ object CanvasMain {
   var canvas: html.Canvas = null
   var ctx: dom.CanvasRenderingContext2D = null
   
-  var rects: ArrayBuffer[JsRectangle] = ArrayBuffer()
-  var circles: ArrayBuffer[JsCircle] = ArrayBuffer()
-  var lines: ArrayBuffer[JsLine] = ArrayBuffer()
+  var rects: ArrayBuffer[Rectangle] = ArrayBuffer()
+  var circles: ArrayBuffer[Circle] = ArrayBuffer()
+  var lines: ArrayBuffer[Line] = ArrayBuffer()
   
   var selfId: Int = -1
+  
+  val colors: List[String] = List("Red","Orange","Yellow","Green","Cyan","Blue","Purple","SaddleBrown","White","Black")
+  var curColorIdx: Int = 0
     
   @JSExportTopLevel("CanvasMain")
   def main(myCanvas: html.Canvas): Unit = {
@@ -70,13 +47,22 @@ object CanvasMain {
     
     canvas.onkeypress = {
       (e: dom.KeyboardEvent) => {
-        //dom.console.log("window received onkeydown event with charCode: " + e.charCode)
-        if(e.charCode == 'R' || e.charCode == 'r') {
+        dom.console.log("window received onkeydown event with keyCode: " + e.keyCode)
+        if(e.keyCode == 114) {
+          // R key
           rectDrawMode()
-        } else if(e.charCode == 'C' || e.charCode == 'c') {
+        } else if(e.keyCode == 99) {
+          // C key
           circleDrawMode()
-        } else if(e.charCode == 'L' || e.charCode == 'l') {
+        } else if(e.keyCode == 108) {
+          // L key
           lineDrawMode()
+        } else if(e.keyCode == 120) {
+          // X key
+          clearShapes()
+        } else if(e.keyCode == 32) {
+          // spacebar
+          curColorIdx = curColorIdx + 1
         }
       }
     }
@@ -94,7 +80,7 @@ object CanvasMain {
       () => {
         ctx.font = "18px Papyrus San MS"
         ctx.fillStyle = "black"
-        ctx.fillText("Rectangle Mode", 5, canvas.height, 300)
+        ctx.fillText("Rectangle Mode", 5, canvas.height - 5, 300)
       }
     }
     
@@ -115,11 +101,11 @@ object CanvasMain {
       //dom.console.log("rectOnClick2 at x: " + e.pageX.toString() + ", y: " + e.pageY.toString())
       val x2 = e.pageX - (canvas.clientLeft)
       val y2 = e.pageY - (canvas.clientTop)
-      val r = js.Dynamic.literal().asInstanceOf[JsRectangle]
-      r.x = x2 - ((x2 - rectX1)/2.0)
-      r.y = y2 - ((y2 - rectY1)/2.0)
-      r.halfWidth = Math.abs(x2 - r.x)
-      r.halfHeight = Math.abs(y2 - r.y)
+      val x1 = if (rectX1 > x2) x2 else rectX1
+      val y1 = if (rectY1 > y2) y2 else rectY1 
+      val width: Double = Math.abs(x2 - rectX1)
+      val height: Double = Math.abs(y2 - rectY1)
+      val r = Rectangle(selfId, colors(curColorIdx), x1, y1, width, height)
       addRectWS(r)
       rectOnClick1()
     }
@@ -133,7 +119,7 @@ object CanvasMain {
       () => {
         ctx.font = "18px Papyrus San MS"
         ctx.fillStyle = "black"
-        ctx.fillText("Circle Mode", 5, canvas.height, 300)
+        ctx.fillText("Circle Mode", 5, canvas.height - 5, 300)
       }
     }
     
@@ -154,11 +140,10 @@ object CanvasMain {
       //dom.console.log("circleOnClick2 at x: " + e.pageX.toString() + ", y: " + e.pageY.toString())
       val x2 = e.pageX - (canvas.clientLeft)
       val y2 = e.pageY - (canvas.clientTop)
-      val c = js.Dynamic.literal().asInstanceOf[JsCircle]
-      c.x = x2 - ((x2 - circX1)/2.0)
-      c.y = y2 - ((y2 - circY1)/2.0)
-      var dist = Math.sqrt(Math.pow(x2 - circX1, 2) + Math.pow(y2 - circY1, 2))
-      c.radius = dist/2.0
+      val xCenter = x2 - ((x2 - circX1)/2.0)
+      val yCenter = y2 - ((y2 - circY1)/2.0)
+      val dist = Math.sqrt(Math.pow(x2 - circX1, 2) + Math.pow(y2 - circY1, 2))
+      val c = Circle(selfId, colors(curColorIdx), xCenter, yCenter, dist / 2.0)
       addCircleWS(c)
       circleOnClick1()
     }
@@ -172,7 +157,7 @@ object CanvasMain {
       () => {
         ctx.font = "18px Papyrus San MS"
         ctx.fillStyle = "black"
-        ctx.fillText("Line Mode", 5, canvas.height, 300)
+        ctx.fillText("Line Mode", 5, canvas.height - 5, 300)
       }
     }
     
@@ -193,31 +178,27 @@ object CanvasMain {
       //dom.console.log("lineOnClick2 at x: " + e.pageX.toString() + ", y: " + e.pageY.toString())
       val x2 = e.pageX - (canvas.clientLeft)
       val y2 = e.pageY - (canvas.clientTop)
-      val ln = js.Dynamic.literal().asInstanceOf[JsLine]
-      ln.x = lineX1
-      ln.y = lineY1
-      ln.endX = x2
-      ln.endY = y2
+      val ln = Line(selfId, colors(curColorIdx), lineX1, lineY1, x2, y2)
       addLineWS(ln)
       lineOnClick1()
     }
   }
   
-  def drawRect(rect: JsRectangle): Unit = {
-    ctx.fillStyle = "red"
-    ctx.fillRect(rect.x - rect.halfWidth, rect.y - rect.halfHeight, rect.halfWidth * 2.0, rect.halfHeight * 2.0)
+  def drawRect(rect: Rectangle): Unit = {
+    ctx.fillStyle = rect.color
+    ctx.fillRect(rect.x, rect.y, rect.width, rect.height)
   }
   
-  def drawCircle(circ: JsCircle): Unit = {
-    ctx.strokeStyle = "blue"
+  def drawCircle(circ: Circle): Unit = {
+    ctx.strokeStyle = circ.color
     ctx.lineWidth = 10
     ctx.beginPath()
     ctx.arc(circ.x, circ.y, circ.radius, 0, 2 * Math.PI)
     ctx.stroke()
   }
   
-  def drawLine(line: JsLine): Unit = {
-    ctx.strokeStyle = "green"
+  def drawLine(line: Line): Unit = {
+    ctx.strokeStyle = line.color
     ctx.lineWidth = 10
     ctx.beginPath()
     ctx.moveTo(line.x, line.y)
@@ -229,15 +210,25 @@ object CanvasMain {
     () => {
       ctx.font = "18px Papyrus San MS"
       ctx.fillStyle = "black"
-      ctx.fillText("Rectangle Mode", 5, canvas.height, 300)
+      ctx.fillText("Rectangle Mode", 5, canvas.height - 5, 300)
     }
   }
 
   def drawUI(): Unit = {
     ctx.font = "30px Papyrus San MS"
     ctx.fillStyle = "black"
-    ctx.fillText("Press R to draw rectangles, C to draw circles, and L to draw lines", 5, 25, 550)
+    ctx.fillText("R = draw rectangles, C = draw circles, L = draw lines, X = clear canvas, Space = cycle colors", 5, 25, 900)
     drawModeText()
+    ctx.font = "18px Papyrus San MS"
+    ctx.fillText("Color", canvas.width - 60, canvas.height - 85, 50)
+    ctx.fillStyle = colors(curColorIdx)
+    ctx.strokeStyle = "black"
+    ctx.lineWidth = 15
+    ctx.fillRect(canvas.width - 70, canvas.height - 70, 60, 60)
+    ctx.strokeRect(canvas.width - 70, canvas.height - 70, 60, 60)
+    ctx.strokeStyle = "white"
+    ctx.lineWidth = 5
+    ctx.strokeRect(canvas.width - 70, canvas.height - 70, 60, 60)
   }
   
   def clearCanvas(): Unit = {
@@ -246,30 +237,36 @@ object CanvasMain {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
   
+  def clearShapes(): Unit = {
+    rects.clear()
+    circles.clear()
+    lines.clear()
+  }
+  
   def drawCanvas(): Unit = {
     clearCanvas()
     drawUI()
     if (rects.length > 0) {
       for (i <- 0 until rects.length) {
-        var r = rects.lift(i)
-        if(r.isDefined) {
-          drawRect(r.get)
+        var rOpt = rects.lift(i)
+        if(rOpt.isDefined) {
+          drawRect(rOpt.get)
         }
       }
     }
     if (circles.length > 0) {
       for (i <- 0 until circles.length) {
-        var c = circles.lift(i)
-        if(c.isDefined) {
-          drawCircle(c.get)
+        var cOpt = circles.lift(i)
+        if(cOpt.isDefined) {
+          drawCircle(cOpt.get)
         }
       }
     }
     if (lines.length > 0) {
       for (i <- 0 until lines.length) {
-        var l = lines.lift(i)
-        if(l.isDefined) {
-          drawLine(l.get)
+        var lOpt = lines.lift(i)
+        if(lOpt.isDefined) {
+          drawLine(lOpt.get)
         }
       }
     }
@@ -282,65 +279,48 @@ object CanvasMain {
     drawCanvas()
   }
   
-  def addRect(_x: Double, _y: Double, _halfWidth: Double, _halfHeight: Double): Unit = {
-    var rect = js.Dynamic.literal().asInstanceOf[JsRectangle]
-    rect.x = _x
-    rect.y = _y
-    rect.halfWidth = _halfWidth
-    rect.halfHeight = _halfHeight
-    rects.append(rect)
+  def addRect(r: Rectangle): Unit = {
+    rects.append(r)
   }
   
-  def doesRectExist(_x: Double, _y: Double, _halfWidth: Double, _halfHeight: Double): Boolean = {
-    rects.exists(r => {
-      r.x == _x && r.y == _y && r.halfWidth == _halfWidth && r.halfHeight == _halfHeight
+  def doesRectExist(rThat: Rectangle): Boolean = {
+    rects.exists(rThis => {
+      rThis.x == rThat.x && rThis.y == rThat.y && rThis.width == rThat.width && rThis.height == rThat.height && rThis.color == rThat.color
     })
   }
   
-  def addCircle(_x: Double, _y: Double, _radius: Double): Unit = {
-    var circ = js.Dynamic.literal().asInstanceOf[JsCircle]
-    circ.x = _x
-    circ.y = _y
-    circ.radius = _radius
-    circles.append(circ)
+  def addCircle(c: Circle): Unit = {
+    circles.append(c)
   }
   
-  def doesCircleExist(_x: Double, _y: Double, _radius: Double): Boolean = {
-    circles.exists(c => {
-      c.x == _x && c.y == _y && c.radius == _radius
+  def doesCircleExist(cThat: Circle): Boolean = {
+    circles.exists(cThis => {
+      cThis.x == cThat.x && cThis.y == cThat.y && cThis.radius == cThat.radius && cThis.color == cThat.color
     })
   }
   
-  def addLine(_x: Double, _y: Double, _endX: Double, _endY: Double): Unit = {
-    var line = js.Dynamic.literal().asInstanceOf[JsLine]
-    line.x = _x
-    line.y = _y
-    line.endX = _endX
-    line.endY = _endY
-    lines.append(line)
+  def addLine(ln: Line): Unit = {
+    lines.append(ln)
   }
   
-  def doesLineExist(_x: Double, _y: Double, _endX: Double, _endY: Double): Boolean = {
-    lines.exists(l => {
-      l.x == _x && l.y == _y && l.endX == _endX && l.endY == _endY
+  def doesLineExist(lnThat: Line): Boolean = {
+    lines.exists(lnThis => {
+      lnThis.x == lnThat.x && lnThis.y == lnThat.y && lnThis.endX == lnThat.endX && lnThis.endY == lnThat.endY && lnThis.color == lnThat.color
     })
   }
   
-  def addRectWS(rect: JsRectangle): Unit = {
-    val rectObj: Shape = Rectangle(rect.x, rect.y, rect.halfWidth, rect.halfHeight)
-    val rectMsg: Message = AddShapeMessage(rectObj)
+  def addRectWS(rect: Rectangle): Unit = {
+    val rectMsg: Message = AddShapeMessage(rect)
     sendOverWS(rectMsg)
   }
   
-  def addCircleWS(circle: JsCircle): Unit = {
-    val circObj: Shape = Circle(circle.x, circle.y, circle.radius)
-    val circMsg: Message = AddShapeMessage(circObj)
+  def addCircleWS(circle: Circle): Unit = {
+    val circMsg: Message = AddShapeMessage(circle)
     sendOverWS(circMsg)
   }
   
-  def addLineWS(line: JsLine): Unit = {
-    val lineObj: Shape = Line(line.x, line.y, line.endX, line.endY)
-    val lineMsg: Message = AddShapeMessage(lineObj)
+  def addLineWS(line: Line): Unit = {
+    val lineMsg: Message = AddShapeMessage(line)
     sendOverWS(lineMsg)
   }
   
@@ -368,40 +348,37 @@ object CanvasMain {
                 val shape = a.shape
                 shape match {
                   case r: Rectangle => {
-                    addRect(r.x, r.y, r.halfWidth, r.halfHeight)
+                    addRect(r)
                   }
                   case c: Circle => {
-                    addCircle(c.x, c.y, c.radius)
+                    addCircle(c)
                   }
                   case l: Line => {
-                    addLine(l.x, l.y, l.endX, l.endY)
+                    addLine(l)
                   }
                 }
               }
               case s: SyncCanvasMessage => {
-                val shapes = s.canvas.shapes
+                val shapes = s.canvas.shapes.reverse
+                clearShapes()
                 shapes.foreach(s => {
                   s match {
                     case r: Rectangle => {
-                      val exists = doesRectExist(r.x, r.y, r.halfWidth, r.halfHeight)
-                      if(!exists) {
-                        addRect(r.x, r.y, r.halfWidth, r.halfHeight)
-                      }
+                      addRect(r)
                     }
                     case c: Circle => {
-                      val exists = doesCircleExist(c.x, c.y, c.radius)
-                      if(!exists) {
-                        addCircle(c.x, c.y, c.radius)
-                      }
+                      addCircle(c)
                     }
-                    case l: Line => {
-                      val exists = doesLineExist(l.x, l.y, l.endX, l.endY)
-                      if(!exists) {
-                        addLine(l.x, l.y, l.endX, l.endY)
-                      }
+                    case ln: Line => {
+                      addLine(ln)
                     }
                   }
                 })
+              }
+              case u: RemoveShapesWithUserIdMessage => {
+                rects = rects.filterNot(r => r.userId == u.userId)
+                circles = circles.filterNot(c => c.userId == u.userId)
+                lines = lines.filterNot(ln => ln.userId == u.userId)
               }
               case i: InitSelfMessage => {
                 selfId = i.selfId

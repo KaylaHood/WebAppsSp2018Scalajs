@@ -30,19 +30,23 @@ class WSActor(val out: ActorRef, val manager: ActorRef) extends Actor {
     case msgIn: Message => {
       msgIn match {
         case a: AddShapeMessage => {
-          //println("WSActor with id: " + this.id + " recieved an AddShapeMessage")
+          //println("WSActor with id: " + this.id + " received an AddShapeMessage")
           manager.tell(AddShape(a), self)
         }
         case s: SyncCanvasMessage => {
-          //println("WSActor with id: " + this.id + " recieved a SyncCanvasMessage")
-          //println("WSActors are not supposed to recieve SyncCanvasMessages from the client")
+          //println("WSActor with id: " + this.id + " received a SyncCanvasMessage")
+          //println("WSActors are not supposed to receive SyncCanvasMessages from the client")
+        }
+        case u: RemoveShapesWithUserIdMessage => {
+          //println("WSActor with id: " + this.id + " received a RemoveShapesWithUserIdMessage")
+          //println("WSActors are not supposed to receive RemoveShapesWithUserIdMessages from the client")
         }
         case i: InitSelfMessage => {
-          //println("WSActor with id: " + this.id + " recieved an InitSelfMessage")
-          //println("WSActors are not supposed to recieve InitSelfMessages from the client")
+          //println("WSActor with id: " + this.id + " received an InitSelfMessage")
+          //println("WSActors are not supposed to receive InitSelfMessages from the client")
         }
         case n: NullMessage => {
-          //println("WSActor with id: " + this.id + " recieved a NullMessage")
+          //println("WSActor with id: " + this.id + " received a NullMessage")
         }
       }
     }

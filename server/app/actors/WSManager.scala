@@ -45,6 +45,9 @@ class WSManager extends Actor {
   def removeClient(clientRef: WSActorRef) = {
     //println("WSManager is removing the WSActor with id: " + clientRef.id)
     clients = clients.filterNot(x => x.ref == clientRef.ref)
+    canvas.shapes = canvas.shapes.filterNot(s => s.userId == clientRef.id)
+    val rmvMsg = RemoveShapesWithUserIdMessage(clientRef.id)
+    clients.foreach(c => c.tell(WSActor.MessageOut(rmvMsg), self))
   }
 
 }

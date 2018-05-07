@@ -1,4 +1,4 @@
-version := "1.0-SNAPSHOT"
+version := "task10"
 
 // Server sub-project - this is where the Play stuff is
 lazy val server = (project in file("server")).settings(commonSettings).settings(
