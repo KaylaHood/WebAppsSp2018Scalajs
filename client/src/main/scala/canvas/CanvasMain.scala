@@ -44,28 +44,29 @@ object CanvasMain {
     
     canvas.setAttribute("tabIndex", "0")
     canvas.focus()
-    
-    canvas.onkeypress = {
-      (e: dom.KeyboardEvent) => {
-        dom.console.log("window received onkeydown event with keyCode: " + e.keyCode)
-        if(e.keyCode == 114) {
-          // R key
-          rectDrawMode()
-        } else if(e.keyCode == 99) {
-          // C key
-          circleDrawMode()
-        } else if(e.keyCode == 108) {
-          // L key
-          lineDrawMode()
-        } else if(e.keyCode == 120) {
-          // X key
-          clearShapes()
-        } else if(e.keyCode == 32) {
-          // spacebar
-          curColorIdx = curColorIdx + 1
+    $(canvas).keydown(this, ( 
+      new js.ThisFunction1[Any, JQueryEventObject, Unit] {
+        def apply(thisArg: Any, e: JQueryEventObject): Unit = {
+          //dom.console.log("window received onkeydown event with keyCode: " + e.keyCode)
+          if(e.which == 82) {
+            // R key
+            rectDrawMode()
+          } else if(e.which == 67) {
+            // C key
+            circleDrawMode()
+          } else if(e.which == 76) {
+            // L key
+            lineDrawMode()
+          } else if(e.which == 88) {
+            // X key
+            clearShapes()
+          } else if(e.which == 32) {
+            // spacebar
+            curColorIdx = curColorIdx + 1
+          }
         }
       }
-    }
+    ))
     
     resizeCanvas()
     
